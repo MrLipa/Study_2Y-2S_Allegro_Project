@@ -1,0 +1,58 @@
+http://localhost:3000/metrics
+
+
+# Process CPU User Time
+# Represents the total amount of time, in seconds, that the process has spent in user mode.
+process_cpu_user_seconds_total{job="backend"}
+
+# Process CPU System Time
+# Represents the total amount of time, in seconds, that the process has spent in system mode.
+process_cpu_system_seconds_total{job="backend"}
+
+# Process Total CPU Time
+# Represents the aggregate time, in seconds, that the process has spent in both user and system mode.
+process_cpu_seconds_total{job="backend"}
+
+# Process Start Time
+# Timestamp indicating when the process started, represented as seconds since the Unix epoch.
+process_start_time_seconds{job="backend"}
+
+# Process Resident Memory Size
+# The portion of the process's memory that is held in RAM in bytes.
+process_resident_memory_bytes{job="backend"}
+
+# Process Virtual Memory Size
+# Total virtual memory used by the process in bytes.
+process_virtual_memory_bytes{job="backend"}
+
+# Node.js Event Loop Lag
+# Time taken for the event loop to complete one cycle in seconds.
+nodejs_eventloop_lag_seconds{job="backend"}
+
+# Total Number of Active Resources in Node.js
+# Represents the number of resources currently keeping the event loop alive.
+nodejs_active_resources_total{job="backend"}
+
+# Total Number of Active Handles in Node.js
+# Represents the number of active libuv handles grouped by handle type.
+nodejs_active_handles_total{job="backend"}
+
+# Total Number of Active Requests in Node.js
+# Represents the number of active libuv requests grouped by request type.
+nodejs_active_requests_total{job="backend"}
+
+# Node.js Total Heap Size
+# Represents the total size of the process heap in bytes.
+nodejs_heap_size_total_bytes{job="backend"}
+
+# Node.js Used Heap Size
+# Represents the portion of the heap that is currently in use, in bytes.
+nodejs_heap_size_used_bytes{job="backend"}
+
+# Node.js Version Info
+# Provides version information about the running Node.js instance.
+nodejs_version_info{job="backend"}
+
+# Total Node.js Server Requests
+# Represents the total number of requests made to the Node.js server, grouped by request method.
+node_requests_total{job="backend", method="GET"}
