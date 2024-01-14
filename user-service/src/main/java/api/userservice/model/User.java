@@ -25,6 +25,9 @@ public class User {
     @Column(nullable = false)
     private String passwordSalt;
 
+    @Column(nullable = true)
+    private String refreshToken;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
