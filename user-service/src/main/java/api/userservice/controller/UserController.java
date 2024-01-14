@@ -156,10 +156,10 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Logout a user", description = "Log out a user by decoding their access token to obtain the user ID, setting their refreshToken to null in the database, and removing the tokens from cookies.")
+    @Operation(summary = "Logout a user", description = "Log out a user using the provided authentication context. This method invalidates the user's session and clears the refresh token.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout successful", content = @Content(mediaType = "text/plain")),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing access token", content = @Content(mediaType = "text/plain")),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - No active user session or invalid authentication context", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "text/plain"))
     })
     @PostMapping("/logout")
@@ -186,12 +186,13 @@ public class UserController {
         return ResponseEntity.ok("Logout successful");
     }
 
-    @Operation(summary = "Delete a user", description = "Deletes a user by extracting their ID from the access token.")
+    @Operation(summary = "Delete a user", description = "Deletes a user based on the ID extracted from the authentication context. Only the user themselves or an admin can delete a user account.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User deleted successfully", content = @Content(mediaType = "text/plain")),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing access token", content = @Content(mediaType = "text/plain")),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - No active user session or invalid authentication context", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "text/plain"))
     })
+
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -254,13 +255,14 @@ public class UserController {
         return ResponseEntity.ok("Role added to user successfully");
     }
 
-    @Operation(summary = "Change User Password", description = "Allows a user to change their password. The user is identified by their access token.")
+    @Operation(summary = "Change User Password", description = "Allows a user to change their password. The user is identified by their authentication context, and the request must include the old and new password.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Password changed successfully", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "400", description = "Invalid old password or new password format", content = @Content(mediaType = "text/plain")),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing access token", content = @Content(mediaType = "text/plain")),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - No active user session or invalid authentication context", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "text/plain"))
     })
+
     @PutMapping("/changePassword")
     public ResponseEntity<String> changePassword(Authentication authentication,
             @RequestBody PasswordChangeDTO passwordChangeDTO) {
@@ -296,13 +298,14 @@ public class UserController {
         return ResponseEntity.ok("Password changed successfully");
     }
 
-    @Operation(summary = "Change User Email", description = "Allows a user to change their email address.")
+    @Operation(summary = "Change User Email", description = "Allows a user to change their email address. The user is identified by their authentication context, and the request must include the new email.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Email changed successfully", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "400", description = "Bad Request - Invalid email format or email already in use", content = @Content(mediaType = "text/plain")),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing access token", content = @Content(mediaType = "text/plain")),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - No active user session or invalid authentication context", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "text/plain"))
     })
+
     @PutMapping("/changeEmail")
     public ResponseEntity<String> changeEmail(Authentication authentication,
             @RequestBody EmailChangeDTO emailChangeDTO) {
