@@ -9,6 +9,9 @@ services:
       - '3001:8080'
     networks: 
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   notification-service:
     build:
@@ -18,6 +21,9 @@ services:
       - '3002:8080'
     networks: 
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   flight-service:
     build:
@@ -27,6 +33,9 @@ services:
       - '3003:8080'
     networks: 
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   airport-service:
     build:
@@ -36,6 +45,9 @@ services:
       - '3004:8080'
     networks: 
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   airplane-service:
     build:
@@ -45,6 +57,9 @@ services:
       - '3005:8080'
     networks: 
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   admin-service:
     build:
@@ -54,6 +69,9 @@ services:
       - '3006:8080'
     networks: 
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   swagger-ui:
     build:
@@ -62,7 +80,7 @@ services:
     user: root
     environment:
       SWAGGER_JSON: "/usr/share/nginx/html/swagger.json"
-    command: sh -c "sleep 15 && swagger-combine swagger.json -o /usr/share/nginx/html/swagger.json -f json && nginx -g 'daemon off;'"
+    command: sh -c "sleep 60 && swagger-combine swagger.json -o /usr/share/nginx/html/swagger.json -f json && nginx -g 'daemon off;'"
     ports:
       - "8080:8080"
     networks: 
@@ -131,85 +149,82 @@ services:
       - app-network
     privileged: true
 
-  prometheus:
-    build:
-      context: ./prometheus
-      dockerfile: Dockerfile
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    networks:
-      - app-network
+  # prometheus:
+  #   build:
+  #     context: ./prometheus
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   networks:
+  #     - app-network
 
-  grafana:
-    build:
-      context: ./grafana
-      dockerfile: Dockerfile
-    ports:
-      - "3010:3000"
-    volumes:
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources/
-      - ./grafana/dashboards-config:/etc/grafana/provisioning/dashboards/
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    networks:
-      - app-network
+  # grafana:
+  #   build:
+  #     context: ./grafana
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3010:3000"
+  #   volumes:
+  #     - ./grafana/datasources:/etc/grafana/provisioning/datasources/
+  #     - ./grafana/dashboards-config:/etc/grafana/provisioning/dashboards/
+  #     - ./grafana/dashboards:/var/lib/grafana/dashboards
+  #   networks:
+  #     - app-network
 
-  elasticsearch:
-    build:
-      context: ./elasticsearch
-      dockerfile: Dockerfile
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-      ELASTIC_PASSWORD: changeme
-      discovery.type: single-node
-    networks:
-      - app-network
+  # elasticsearch:
+  #   build:
+  #     context: ./elasticsearch
+  #     dockerfile: Dockerfile
+  #     args:
+  #       ELK_VERSION: $ELK_VERSION
+  #   volumes:
+  #     - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   environment:
+  #     ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+  #     ELASTIC_PASSWORD: changeme
+  #     discovery.type: single-node
+  #   networks:
+  #     - app-network
 
-  logstash:
-    build:
-      context: ./logstash
-      dockerfile: Dockerfile
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./logstash/pipeline:/usr/share/logstash/pipeline
-    ports:
-      - "9600:9600"
-      - "12201:12201/udp"
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-    depends_on:
-      - elasticsearch
-    networks:
-      - app-network
+  # logstash:
+  #   build:
+  #     context: ./logstash
+  #     dockerfile: Dockerfile
+  #     args:
+  #       ELK_VERSION: $ELK_VERSION
+  #   volumes:
+  #     - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+  #     - ./logstash/pipeline:/usr/share/logstash/pipeline
+  #   ports:
+  #     - "9600:9600"
+  #     - "12201:12201/udp"
+  #   environment:
+  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+  #   depends_on:
+  #     - elasticsearch
+  #   networks:
+  #     - app-network
 
-  kibana:
-    build:
-      context: ./kibana
-      dockerfile: Dockerfile
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
-      - ./kibana/kibana.ndjson:/usr/share/kibana/config/kibana.ndjson
-    ports:
-      - "5601:5601"
-    depends_on:
-    - elasticsearch
-    networks:
-      - app-network
-
-volumes:
-  jenkins_home:
+  # kibana:
+  #   build:
+  #     context: ./kibana
+  #     dockerfile: Dockerfile
+  #     args:
+  #       ELK_VERSION: $ELK_VERSION
+  #   volumes:
+  #     - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+  #     - ./kibana/kibana.ndjson:/usr/share/kibana/config/kibana.ndjson
+  #   ports:
+  #     - "5601:5601"
+  #   depends_on:
+  #   - elasticsearch
+  #   networks:
+  #     - app-network
 
 networks:
   app-network:
