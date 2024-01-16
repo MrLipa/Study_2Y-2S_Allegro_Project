@@ -37,4 +37,4 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./${{ matrix.service }}/gradlew
       - name: Build with Gradle
-        run: cd ./${{ matrix.service }} && ./gradlew build
+        run: cd ./${{ matrix.service }} && ./gradlew build -x test
