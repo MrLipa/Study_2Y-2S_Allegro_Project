@@ -73,16 +73,30 @@ services:
       - postgres
     privileged: true
 
+  swagger-editor:
+    image: swaggerapi/swagger-editor
+    container_name: "swagger-editor"
+    ports:
+      - "8081:8080"
+    networks: 
+      - app-network
+    depends_on:
+      - user-service
+      - notification-service
+      - flight-service
+      - airport-service
+      - airplane-service
+      - admin-service
+
   swagger-ui:
-    build:
-      context: ./swagger
-      dockerfile: Dockerfile
-    user: root
-    environment:
-      SWAGGER_JSON: "/usr/share/nginx/html/swagger.json"
-    command: sh -c "sleep 60 && swagger-combine swagger.json -o /usr/share/nginx/html/swagger.json -f json && nginx -g 'daemon off;'"
+    image: swaggerapi/swagger-ui
+    container_name: swagger-ui
     ports:
       - "8080:8080"
+    volumes:
+      - ./swagger/openapi.json:/openapi.json
+    environment:
+      SWAGGER_JSON: /openapi.json
     networks: 
       - app-network
     depends_on:
