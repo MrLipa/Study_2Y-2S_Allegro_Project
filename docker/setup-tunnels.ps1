@@ -14,7 +14,9 @@ $sshCommand = "ssh -N -f "
 
 # Dodaj przekierowania portów do polecenia
 $portForwarding = ""
-foreach ($port in 3001..3006) {
+$ports = @(3001, 3002, 3003, 3004, 3005, 3006, 8080)
+
+foreach ($port in $ports) {
     $portForwarding += "-L $($port):172.20.73.4:$($port) "
 }
 
