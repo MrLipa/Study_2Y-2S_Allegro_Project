@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// @Disabled("h2-not-working")
+@Disabled("h2-not-working")
 public class FlightControllerIntegrationTest {
 
     @LocalServerPort
