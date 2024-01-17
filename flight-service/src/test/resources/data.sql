@@ -1,45 +1,13 @@
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    password_salt VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    refresh_token VARCHAR(255)
-);
 INSERT INTO users (username, password, password_salt, email, refresh_token)
 VALUES ('admin', '$2a$10$hlbR8xSCnlUsXkKJI4mOf.aXnnfH4KqS/KLms7HdvU9aQjkazMC5O', '$2a$10$Lt5L35m/vToBge4bJBrVl.', 'admin@example.com', NULL);
-/*
-password: Admin
-*/
-
-CREATE TABLE roles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
-);
 
 INSERT INTO roles (name) VALUES ('ROLE_USER'),('ROLE_ADMIN'),('ROLE_AIRPORT_MANAGER'),('ROLE_AIRPLANE_MANAGER'),('ROLE_FLIGHT_MANAGER');
-
-CREATE TABLE user_roles (
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    role_id INTEGER NOT NULL REFERENCES roles(id),
-    PRIMARY KEY (user_id, role_id)
-);
 
 INSERT INTO user_roles (user_id, role_id)
 SELECT users.id, roles.id
 FROM users, roles
 WHERE users.username = 'admin'
 AND roles.name IN ('ROLE_USER', 'ROLE_ADMIN');
-
-CREATE TABLE airport (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    country VARCHAR(100) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    longitude DECIMAL(9,6) NOT NULL,
-    latitude DECIMAL(9,6) NOT NULL,
-    description TEXT
-);
 
 INSERT INTO airport (name, country, city, longitude, latitude, description)
 VALUES  ('John F. Kennedy International Airport', 'United States', 'New York', 40.6413, -73.7781, 'One of the busiest airports in the world.'),
@@ -52,16 +20,6 @@ VALUES  ('John F. Kennedy International Airport', 'United States', 'New York', 4
         ('Tokyo Haneda Airport', 'Japan', 'Tokyo', 35.5494, 139.7798, 'One of the major airports serving the Greater Tokyo Area.'),
         ('Frankfurt Airport', 'Germany', 'Frankfurt', 50.0333, 8.5706, 'One of the busiest airports in Europe located in Frankfurt.'),
         ('Singapore Changi Airport', 'Singapore', 'Singapore', 1.3644, 103.9915, 'One of the busiest airports in the world located in Singapore.');
-
-CREATE TABLE airplane (
-    id SERIAL PRIMARY KEY,
-    model VARCHAR(100) NOT NULL,
-    production_date DATE NOT NULL,
-    number_of_seats INTEGER NOT NULL,
-    max_distance INTEGER NOT NULL,
-    airport_id INTEGER NOT NULL REFERENCES airport(id)
-);
-
 
 INSERT INTO airplane (model, production_date, number_of_seats, max_distance, airport_id)
 VALUES
@@ -78,18 +36,6 @@ VALUES
 ('Cessna Citation X', '2002-06-17', 12, 6297, 1),
 ('Airbus A330', '2007-04-27', 290, 13400, 2),
 ('McDonnell Douglas MD-80', '1985-12-15', 172, 4600, 3);
-
-CREATE TABLE flight (
-    id SERIAL PRIMARY KEY,
-    airplane_id INTEGER NOT NULL REFERENCES airplane(id),
-    start_airport_id INTEGER NOT NULL REFERENCES airport(id),
-    destination_airport_id INTEGER NOT NULL REFERENCES airport(id),
-    start_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    arrival_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    number_of_available_seats INTEGER NOT NULL,
-    description TEXT
-);
 
 INSERT INTO flight (airplane_id, start_airport_id, destination_airport_id, start_date, arrival_date, price, number_of_available_seats, description)
 VALUES
