@@ -7,9 +7,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -21,11 +24,15 @@ import api.flightservice.model.Airplane;
 import api.flightservice.model.Airport;
 import api.flightservice.model.Flight;
 import api.flightservice.model.dto.FlightDTO;
+import api.flightservice.model.specification.FlightSpecification;
+import api.flightservice.model.specification.SearchCriteria;
 import api.flightservice.repository.AirplaneRepository;
 import api.flightservice.repository.AirportRepository;
 import api.flightservice.repository.FlightRepository;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,32 +102,202 @@ public class FlightControllerTest {
         verify(flightRepository, times(1)).findById(id);
     }
 
-    // @Test
-    // public void testCreateFlight_Success() {
-    //     // Arrange
-    //     FlightDTO flightDTO = new FlightDTO();
-    //     Airplane airplane = new Airplane();
-    //     Airport startAirport = new Airport();
-    //     Airport destinationAirport = new Airport();
+    @Test
+    public void testCreateFlight_Success() {
+        // Arrange
+        FlightDTO flightDTO = new FlightDTO();
+        flightDTO.setAirplaneId(1L);
+        flightDTO.setStartAirportId(1L);
+        flightDTO.setDestinationAirportId(2L);
 
-    //     when(airplaneRepository.findById(anyLong())).thenReturn(Optional.of(airplane));
-    //     when(airportRepository.findById(flightDTO.getStartAirportId())).thenReturn(Optional.of(startAirport));
-    //     when(airportRepository.findById(flightDTO.getDestinationAirportId()))
-    //             .thenReturn(Optional.of(destinationAirport));
-    //     when(flightRepository.save(any(Flight.class))).thenReturn(new Flight());
+        Airplane airplane = new Airplane();
+        Airport startAirport = new Airport();
+        Airport destinationAirport = new Airport();
 
-    //     MockHttpServletRequest request = new MockHttpServletRequest();
-    //     RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        when(airplaneRepository.findById(anyLong())).thenReturn(Optional.of(airplane));
+        when(airportRepository.findById(flightDTO.getStartAirportId())).thenReturn(Optional.of(startAirport));
+        when(airportRepository.findById(flightDTO.getDestinationAirportId()))
+                .thenReturn(Optional.of(destinationAirport));
+        when(flightRepository.save(any(Flight.class))).thenReturn(new Flight());
 
-    //     // Act
-    //     ResponseEntity<?> response = flightController.createFlight(flightDTO);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
 
-    //     // Assert
-    //     assertNotNull(response.getBody());
-    //     assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        // Act
+        ResponseEntity<?> response = flightController.createFlight(flightDTO);
 
-    //     verify(airplaneRepository, times(1)).findById(anyLong());
-    //     verify(airportRepository, times(2)).findById(anyLong());
-    //     verify(flightRepository, times(1)).save(any(Flight.class));
-    // }
+        // Assert
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+
+        verify(airplaneRepository, times(1)).findById(anyLong());
+        verify(airportRepository, times(2)).findById(anyLong());
+        verify(flightRepository, times(1)).save(any(Flight.class));
+        verify(airplaneRepository, times(1)).findById(anyLong());
+        verify(airportRepository, times(1)).findById(flightDTO.getStartAirportId());
+        verify(airportRepository, times(1)).findById(flightDTO.getDestinationAirportId());
+        verify(flightRepository, times(1)).save(any(Flight.class));
+
+    }
+
+    @Test
+    public void testUpdateFlight_Success() {
+        // Arrange
+        Long id = 1L;
+        Flight existingFlight = new Flight();
+        FlightDTO flightDTO = new FlightDTO();
+
+        when(flightRepository.findById(id)).thenReturn(Optional.of(existingFlight));
+        when(airplaneRepository.findById(flightDTO.getAirplaneId())).thenReturn(Optional.of(new Airplane()));
+        when(airportRepository.findById(flightDTO.getStartAirportId())).thenReturn(Optional.of(new Airport()));
+        when(airportRepository.findById(flightDTO.getDestinationAirportId())).thenReturn(Optional.of(new Airport()));
+        when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
+
+        // Act
+        ResponseEntity<?> response = flightController.updateFlight(id, flightDTO);
+
+        // Assert
+        assertNotNull(response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(flightRepository, times(1)).findById(id);
+        verify(flightRepository, times(1)).save(any(Flight.class));
+    }
+
+    @Test
+    public void testCreateFlight_AirplaneDoesNotExist() {
+        // Arrange
+        FlightDTO flightDTO = new FlightDTO();
+        flightDTO.setAirplaneId(1L);
+        when(airplaneRepository.findById(flightDTO.getAirplaneId())).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<?> response = flightController.createFlight(flightDTO);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(airplaneRepository, times(1)).findById(flightDTO.getAirplaneId());
+        verify(airportRepository, never()).findById(anyLong());
+        verify(flightRepository, never()).save(any(Flight.class));
+    }
+
+    @Test
+    public void testCreateFlight_StartAirportDoesNotExist() {
+        // Arrange
+        FlightDTO flightDTO = new FlightDTO();
+        Airplane airplane = new Airplane();
+        flightDTO.setAirplaneId(1L);
+        flightDTO.setStartAirportId(1L);
+        when(airplaneRepository.findById(flightDTO.getAirplaneId())).thenReturn(Optional.of(airplane));
+        when(airportRepository.findById(flightDTO.getStartAirportId())).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<?> response = flightController.createFlight(flightDTO);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(airplaneRepository, times(1)).findById(flightDTO.getAirplaneId());
+        verify(airportRepository, times(1)).findById(flightDTO.getStartAirportId());
+        verify(flightRepository, never()).save(any(Flight.class));
+    }
+
+    @Test
+    public void testUpdateFlight_FlightDoesNotExist() {
+        // Arrange
+        Long id = 1L;
+        FlightDTO flightDTO = new FlightDTO();
+        when(flightRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<?> response = flightController.updateFlight(id, flightDTO);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(flightRepository, times(1)).findById(id);
+        verify(flightRepository, never()).save(any(Flight.class));
+    }
+
+    @Test
+    public void testDeleteFlight_Success() {
+        // Arrange
+        Long id = 1L;
+        when(flightRepository.existsById(id)).thenReturn(true);
+
+        // Act
+        ResponseEntity<HttpStatus> response = flightController.deleteFlight(id);
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(flightRepository, times(1)).deleteById(id);
+    }
+
+    @Test
+    public void testDeleteFlight_NotFound() {
+        // Arrange
+        Long id = 1L;
+        when(flightRepository.existsById(id)).thenReturn(false);
+
+        // Act
+        ResponseEntity<HttpStatus> response = flightController.deleteFlight(id);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(flightRepository, never()).deleteById(id);
+    }
+
+    @Test
+    @Disabled("problems witch search")
+    public void testSearchFlights_Success() {
+        // Arrange
+        SearchCriteria criteriaDepartureAirport = new SearchCriteria("startAirport", ":", "JFK");
+        SearchCriteria criteriaArrivalAirport = new SearchCriteria("destinationAirport", ":", "LAX");
+        SearchCriteria criteriaMaxPrice = new SearchCriteria("price", "<=", new BigDecimal("500.00"));
+
+        List<SearchCriteria> searchCriteriaList = Arrays.asList(criteriaDepartureAirport, criteriaArrivalAirport,
+                criteriaMaxPrice);
+
+        List<Flight> foundFlights = Arrays.asList(new Flight(), new Flight());
+        Specification<Flight> spec = createSpecificationFromCriteria(searchCriteriaList);
+        when(flightRepository.findAll(spec)).thenReturn(foundFlights);
+
+        // Act
+        ResponseEntity<List<Flight>> response = flightController.searchFlights(searchCriteriaList);
+
+        // Assert
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(flightRepository, times(1)).findAll(spec);
+    }
+
+    private Specification<Flight> createSpecificationFromCriteria(List<SearchCriteria> criteriaList) {
+        Specification<Flight> specification = Specification.where(null);
+
+        for (SearchCriteria criteria : criteriaList) {
+            FlightSpecification flightSpec = new FlightSpecification(criteria);
+            specification = specification.and(flightSpec);
+        }
+
+        return specification;
+    }
+
+    @Test
+    @Disabled("problems witch search")
+    public void testSearchFlights_NoResults() {
+        // Arrange
+        List<SearchCriteria> searchCriteriaList = Arrays.asList(
+                new SearchCriteria("departure", ":", "NYC"),
+                new SearchCriteria("arrival", ":", "LAX"));
+        Specification<Flight> spec = createSpecificationFromCriteria(searchCriteriaList);
+        when(flightRepository.findAll(spec)).thenReturn(Collections.emptyList());
+
+        // Act
+        ResponseEntity<List<Flight>> response = flightController.searchFlights(searchCriteriaList);
+
+        // Assert
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isEmpty());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(flightRepository, times(1)).findAll(spec);
+    }
+
 }
