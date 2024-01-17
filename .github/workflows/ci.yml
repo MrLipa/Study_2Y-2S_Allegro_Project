@@ -38,3 +38,9 @@ jobs:
         run: chmod +x ./${{ matrix.service }}/gradlew
       - name: Build with Gradle
         run: cd ./${{ matrix.service }} && ./gradlew build -x test
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.service }}-artifact
+          path: |
+            ./${{ matrix.service }}/build/libs/*.jar
