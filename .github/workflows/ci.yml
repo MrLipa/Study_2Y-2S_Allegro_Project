@@ -39,9 +39,9 @@ jobs:
       - name: Build with Gradle
         run: cd ./${{ matrix.service }} && ./gradlew build -x test
 
-      # # Snyk Integration
-      # - name: Install Snyk
-      #   run: npm install -g snyk
+      # Snyk Integration
+      - name: Install Snyk
+        run: npm install -g snyk
       # - name: Snyk Auth
       #   run: snyk auth ${{ secrets.SNYK_TOKEN }}
       # - name: Snyk Test
