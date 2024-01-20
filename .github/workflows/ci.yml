@@ -39,8 +39,8 @@ jobs:
         run: npm install -g snyk
       - name: Snyk Auth
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
-      # - name: Snyk Test
-      #   run: snyk test --all-projects
+      - name: Snyk Test
+        run: snyk test --all-projects
       # - name: Snyk Monitor
       #   run: snyk monitor --all-projects
 
