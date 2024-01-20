@@ -26,4 +26,4 @@ jobs:
           - admin-service
     steps:
       - name: Echo custom token
-        run: echo "Mój token to ${{ secrets.GHCR_LOGIN }}"
+        run: echo "Mój token to ${{ secrets.GHCR_TOKEN }}"
