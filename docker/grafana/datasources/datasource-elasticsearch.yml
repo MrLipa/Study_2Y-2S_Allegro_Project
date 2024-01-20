@@ -1,6 +1,0 @@
-datasources:
-  - name: DS_ELASTICSEARCH
-    type: elasticsearch
-    url: http://elasticsearch:9200
-    access: proxy
-    database: "[nazwa twojego indeksu w Elasticsearch]"

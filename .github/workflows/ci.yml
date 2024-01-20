@@ -5,9 +5,9 @@ name: Java CI with Gradle
 
 on:
   push:
-    branches: [ main ]
+    branches: [ test ]
   pull_request:
-    branches: [ main ]
+    branches: [ test ]
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
@@ -18,12 +18,7 @@ jobs:
     strategy:
       matrix:
         service:
-          - user-service
           - notification-service
-          - flight-service
-          - airport-service
-          - airplane-service
-          - admin-service
     steps:
       - name: Say Hello
         run: echo "Hello World"

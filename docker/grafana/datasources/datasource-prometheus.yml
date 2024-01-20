@@ -1,4 +1,0 @@
-datasources:
-  - name: DS_PROMETHEUS
-    type: prometheus
-    url: http://prometheus:9090
