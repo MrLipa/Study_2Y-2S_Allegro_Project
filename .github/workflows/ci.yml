@@ -64,7 +64,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           SERVICE_NAME=${{ matrix.service }}
-          VERSION=$(git rev-parse --short HEAD) # Pobierz krótki hash commita jako wersję
+          VERSION=213742069
           IMAGE_NAME=ghcr.io/mrlipa/$SERVICE_NAME:$VERSION
           
           # Zbuduj obraz Docker

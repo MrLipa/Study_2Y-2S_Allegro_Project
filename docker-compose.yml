@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  user-service:
+    image: ghcr.io/mrlipa/user-service:213742069
+    ports:
+      - "8100:8080"
+    networks:
+      - mynetwork
+
+  notification-service:
+    image: ghcr.io/mrlipa/notification-service:213742069
+    ports:
+      - "8200:8080"
+    networks:
+      - mynetwork
+
+  flight-service:
+    image: ghcr.io/mrlipa/flight-service:213742069
+    ports:
+      - "8300:8080"
+    networks:
+      - mynetwork
+
+  airport-service:
+    image: ghcr.io/mrlipa/airport-service:213742069
+    ports:
+      - "8400:8080"
+    networks:
+      - mynetwork
+
+  airplane-service:
+    image: ghcr.io/mrlipa/airplane-service:213742069
+    ports:
+      - "8500:8080"
+    networks:
+      - mynetwork
+
+  admin-service:
+    image: ghcr.io/mrlipa/admin-service:213742069
+    ports:
+      - "8600:8080"
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge
