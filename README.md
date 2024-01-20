@@ -11,6 +11,7 @@ gradlew build --no-daemon -x test
 
 
 
+echo YOUR_PERSONAL_ACCESS_TOKEN | docker login ghcr.io -u MrLipa --password-stdin
 
 
 

@@ -50,8 +50,8 @@
                     "required": true
                 },
                 "responses": {
-                    "400": {
-                        "description": "Invalid old password or new password format",
+                    "404": {
+                        "description": "User not found",
                         "content": {
                             "text/plain": {}
                         }
@@ -62,8 +62,8 @@
                             "text/plain": {}
                         }
                     },
-                    "404": {
-                        "description": "User not found",
+                    "400": {
+                        "description": "Invalid old password or new password format",
                         "content": {
                             "text/plain": {}
                         }
@@ -96,8 +96,8 @@
                     "required": true
                 },
                 "responses": {
-                    "200": {
-                        "description": "Email changed successfully",
+                    "404": {
+                        "description": "User not found",
                         "content": {
                             "text/plain": {}
                         }
@@ -114,8 +114,8 @@
                             "text/plain": {}
                         }
                     },
-                    "404": {
-                        "description": "User not found",
+                    "200": {
+                        "description": "Email changed successfully",
                         "content": {
                             "text/plain": {}
                         }
@@ -142,14 +142,14 @@
                     "required": true
                 },
                 "responses": {
-                    "404": {
-                        "description": "User or role not found",
+                    "200": {
+                        "description": "Role added to user successfully",
                         "content": {
                             "text/plain": {}
                         }
                     },
-                    "200": {
-                        "description": "Role added to user successfully",
+                    "404": {
+                        "description": "User or role not found",
                         "content": {
                             "text/plain": {}
                         }
@@ -176,14 +176,14 @@
                     "required": true
                 },
                 "responses": {
-                    "409": {
-                        "description": "User already exists",
+                    "201": {
+                        "description": "User registered successfully",
                         "content": {
                             "text/plain": {}
                         }
                     },
-                    "201": {
-                        "description": "User registered successfully",
+                    "409": {
+                        "description": "User already exists",
                         "content": {
                             "text/plain": {}
                         }
@@ -206,14 +206,14 @@
                 "description": "Log out a user using the provided authentication context. This method invalidates the user's session and clears the refresh token.",
                 "operationId": "logout",
                 "responses": {
-                    "401": {
-                        "description": "Unauthorized - No active user session or invalid authentication context",
+                    "404": {
+                        "description": "User not found",
                         "content": {
                             "text/plain": {}
                         }
                     },
-                    "404": {
-                        "description": "User not found",
+                    "401": {
+                        "description": "Unauthorized - No active user session or invalid authentication context",
                         "content": {
                             "text/plain": {}
                         }
@@ -246,14 +246,14 @@
                     "required": true
                 },
                 "responses": {
-                    "200": {
-                        "description": "Login successful",
+                    "404": {
+                        "description": "User not found",
                         "content": {
                             "text/plain": {}
                         }
                     },
-                    "404": {
-                        "description": "User not found",
+                    "200": {
+                        "description": "Login successful",
                         "content": {
                             "text/plain": {}
                         }
@@ -304,12 +304,6 @@
                 "description": "Deletes a user based on the ID extracted from the authentication context. Only the user themselves or an admin can delete a user account.",
                 "operationId": "deleteUser",
                 "responses": {
-                    "401": {
-                        "description": "Unauthorized - No active user session or invalid authentication context",
-                        "content": {
-                            "text/plain": {}
-                        }
-                    },
                     "200": {
                         "description": "User deleted successfully",
                         "content": {
@@ -318,6 +312,12 @@
                     },
                     "404": {
                         "description": "User not found",
+                        "content": {
+                            "text/plain": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - No active user session or invalid authentication context",
                         "content": {
                             "text/plain": {}
                         }
@@ -385,19 +385,409 @@
                 }
             }
         },
-        "/flight": {
+        "/flights/{id}": {
             "get": {
                 "tags": [
                     "flight-controller"
                 ],
-                "operationId": "getFlight",
+                "summary": "Get flight by ID",
+                "description": "Retrieve a specific flight by its ID",
+                "operationId": "getFlightById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "404": {
+                        "description": "Flight not found",
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "string"
+                                    "$ref": "#/components/schemas/Flight"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Found the flight",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Flight"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "flight-controller"
+                ],
+                "summary": "Update an existing flight",
+                "description": "Updates an existing flight identified by its ID with the provided flight details. Only non-null fields in the FlightDTO will be updated. Fields left null will retain their current values in the database, effectively allowing partial updates of the flight entity.",
+                "operationId": "updateFlight",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FlightDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Flight updated successfully, returns the updated Flight object.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request, possibly due to invalid input like non-existent airplane ID or airport IDs.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Flight not found with the provided ID.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error, possible issues with server or database.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "flight-controller"
+                ],
+                "summary": "Delete a flight",
+                "description": "Delete a flight with the provided ID",
+                "operationId": "deleteFlight",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "404": {
+                        "description": "Flight not found",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "100 CONTINUE",
+                                        "101 SWITCHING_PROTOCOLS",
+                                        "102 PROCESSING",
+                                        "103 EARLY_HINTS",
+                                        "103 CHECKPOINT",
+                                        "200 OK",
+                                        "201 CREATED",
+                                        "202 ACCEPTED",
+                                        "203 NON_AUTHORITATIVE_INFORMATION",
+                                        "204 NO_CONTENT",
+                                        "205 RESET_CONTENT",
+                                        "206 PARTIAL_CONTENT",
+                                        "207 MULTI_STATUS",
+                                        "208 ALREADY_REPORTED",
+                                        "226 IM_USED",
+                                        "300 MULTIPLE_CHOICES",
+                                        "301 MOVED_PERMANENTLY",
+                                        "302 FOUND",
+                                        "302 MOVED_TEMPORARILY",
+                                        "303 SEE_OTHER",
+                                        "304 NOT_MODIFIED",
+                                        "305 USE_PROXY",
+                                        "307 TEMPORARY_REDIRECT",
+                                        "308 PERMANENT_REDIRECT",
+                                        "400 BAD_REQUEST",
+                                        "401 UNAUTHORIZED",
+                                        "402 PAYMENT_REQUIRED",
+                                        "403 FORBIDDEN",
+                                        "404 NOT_FOUND",
+                                        "405 METHOD_NOT_ALLOWED",
+                                        "406 NOT_ACCEPTABLE",
+                                        "407 PROXY_AUTHENTICATION_REQUIRED",
+                                        "408 REQUEST_TIMEOUT",
+                                        "409 CONFLICT",
+                                        "410 GONE",
+                                        "411 LENGTH_REQUIRED",
+                                        "412 PRECONDITION_FAILED",
+                                        "413 PAYLOAD_TOO_LARGE",
+                                        "413 REQUEST_ENTITY_TOO_LARGE",
+                                        "414 URI_TOO_LONG",
+                                        "414 REQUEST_URI_TOO_LONG",
+                                        "415 UNSUPPORTED_MEDIA_TYPE",
+                                        "416 REQUESTED_RANGE_NOT_SATISFIABLE",
+                                        "417 EXPECTATION_FAILED",
+                                        "418 I_AM_A_TEAPOT",
+                                        "419 INSUFFICIENT_SPACE_ON_RESOURCE",
+                                        "420 METHOD_FAILURE",
+                                        "421 DESTINATION_LOCKED",
+                                        "422 UNPROCESSABLE_ENTITY",
+                                        "423 LOCKED",
+                                        "424 FAILED_DEPENDENCY",
+                                        "425 TOO_EARLY",
+                                        "426 UPGRADE_REQUIRED",
+                                        "428 PRECONDITION_REQUIRED",
+                                        "429 TOO_MANY_REQUESTS",
+                                        "431 REQUEST_HEADER_FIELDS_TOO_LARGE",
+                                        "451 UNAVAILABLE_FOR_LEGAL_REASONS",
+                                        "500 INTERNAL_SERVER_ERROR",
+                                        "501 NOT_IMPLEMENTED",
+                                        "502 BAD_GATEWAY",
+                                        "503 SERVICE_UNAVAILABLE",
+                                        "504 GATEWAY_TIMEOUT",
+                                        "505 HTTP_VERSION_NOT_SUPPORTED",
+                                        "506 VARIANT_ALSO_NEGOTIATES",
+                                        "507 INSUFFICIENT_STORAGE",
+                                        "508 LOOP_DETECTED",
+                                        "509 BANDWIDTH_LIMIT_EXCEEDED",
+                                        "510 NOT_EXTENDED",
+                                        "511 NETWORK_AUTHENTICATION_REQUIRED"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "Flight deleted successfully",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "100 CONTINUE",
+                                        "101 SWITCHING_PROTOCOLS",
+                                        "102 PROCESSING",
+                                        "103 EARLY_HINTS",
+                                        "103 CHECKPOINT",
+                                        "200 OK",
+                                        "201 CREATED",
+                                        "202 ACCEPTED",
+                                        "203 NON_AUTHORITATIVE_INFORMATION",
+                                        "204 NO_CONTENT",
+                                        "205 RESET_CONTENT",
+                                        "206 PARTIAL_CONTENT",
+                                        "207 MULTI_STATUS",
+                                        "208 ALREADY_REPORTED",
+                                        "226 IM_USED",
+                                        "300 MULTIPLE_CHOICES",
+                                        "301 MOVED_PERMANENTLY",
+                                        "302 FOUND",
+                                        "302 MOVED_TEMPORARILY",
+                                        "303 SEE_OTHER",
+                                        "304 NOT_MODIFIED",
+                                        "305 USE_PROXY",
+                                        "307 TEMPORARY_REDIRECT",
+                                        "308 PERMANENT_REDIRECT",
+                                        "400 BAD_REQUEST",
+                                        "401 UNAUTHORIZED",
+                                        "402 PAYMENT_REQUIRED",
+                                        "403 FORBIDDEN",
+                                        "404 NOT_FOUND",
+                                        "405 METHOD_NOT_ALLOWED",
+                                        "406 NOT_ACCEPTABLE",
+                                        "407 PROXY_AUTHENTICATION_REQUIRED",
+                                        "408 REQUEST_TIMEOUT",
+                                        "409 CONFLICT",
+                                        "410 GONE",
+                                        "411 LENGTH_REQUIRED",
+                                        "412 PRECONDITION_FAILED",
+                                        "413 PAYLOAD_TOO_LARGE",
+                                        "413 REQUEST_ENTITY_TOO_LARGE",
+                                        "414 URI_TOO_LONG",
+                                        "414 REQUEST_URI_TOO_LONG",
+                                        "415 UNSUPPORTED_MEDIA_TYPE",
+                                        "416 REQUESTED_RANGE_NOT_SATISFIABLE",
+                                        "417 EXPECTATION_FAILED",
+                                        "418 I_AM_A_TEAPOT",
+                                        "419 INSUFFICIENT_SPACE_ON_RESOURCE",
+                                        "420 METHOD_FAILURE",
+                                        "421 DESTINATION_LOCKED",
+                                        "422 UNPROCESSABLE_ENTITY",
+                                        "423 LOCKED",
+                                        "424 FAILED_DEPENDENCY",
+                                        "425 TOO_EARLY",
+                                        "426 UPGRADE_REQUIRED",
+                                        "428 PRECONDITION_REQUIRED",
+                                        "429 TOO_MANY_REQUESTS",
+                                        "431 REQUEST_HEADER_FIELDS_TOO_LARGE",
+                                        "451 UNAVAILABLE_FOR_LEGAL_REASONS",
+                                        "500 INTERNAL_SERVER_ERROR",
+                                        "501 NOT_IMPLEMENTED",
+                                        "502 BAD_GATEWAY",
+                                        "503 SERVICE_UNAVAILABLE",
+                                        "504 GATEWAY_TIMEOUT",
+                                        "505 HTTP_VERSION_NOT_SUPPORTED",
+                                        "506 VARIANT_ALSO_NEGOTIATES",
+                                        "507 INSUFFICIENT_STORAGE",
+                                        "508 LOOP_DETECTED",
+                                        "509 BANDWIDTH_LIMIT_EXCEEDED",
+                                        "510 NOT_EXTENDED",
+                                        "511 NETWORK_AUTHENTICATION_REQUIRED"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/flights": {
+            "get": {
+                "tags": [
+                    "flight-controller"
+                ],
+                "summary": "Get all flights",
+                "description": "Retrieve a list of all flights",
+                "operationId": "getAllFlights",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved list",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Flight"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "flight-controller"
+                ],
+                "summary": "Create a new flight",
+                "description": "Creates a new flight with the provided flight details. This operation requires a FlightDTO object with details like airplane ID, start and destination airports, start and arrival dates, price, and an optional description.",
+                "operationId": "createFlight",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FlightDTO"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "400": {
+                        "description": "Bad Request, possibly due to invalid airplane ID or invalid airport IDs.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Flight created successfully, returns the created Flight object.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error, possible issues with server or database.",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/flights/search": {
+            "post": {
+                "tags": [
+                    "flight-controller"
+                ],
+                "summary": "Search flights",
+                "description": "Search for flights based on various criteria such as airplane, start and destination airports, dates, and price range",
+                "operationId": "searchFlights",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/SearchCriteria"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Search completed successfully",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Flight"
+                                    }
                                 }
                             }
                         }
@@ -1371,30 +1761,48 @@
                     }
                 }
             },
-            "Airport": {
+            "FlightDTO": {
                 "type": "object",
                 "properties": {
-                    "id": {
+                    "airplaneId": {
                         "type": "integer",
                         "format": "int64"
                     },
-                    "name": {
-                        "type": "string"
+                    "startAirportId": {
+                        "type": "integer",
+                        "format": "int64"
                     },
-                    "country": {
-                        "type": "string"
+                    "destinationAirportId": {
+                        "type": "integer",
+                        "format": "int64"
                     },
-                    "city": {
-                        "type": "string"
+                    "startDate": {
+                        "type": "string",
+                        "format": "date-time"
                     },
-                    "longitude": {
-                        "type": "number"
+                    "arrivalDate": {
+                        "type": "string",
+                        "format": "date-time"
                     },
-                    "latitude": {
+                    "price": {
                         "type": "number"
                     },
                     "description": {
                         "type": "string"
+                    }
+                }
+            },
+            "SearchCriteria": {
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "operation": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "object"
                     }
                 }
             },
@@ -1422,6 +1830,69 @@
                     },
                     "airport": {
                         "$ref": "#/components/schemas/Airport"
+                    }
+                }
+            },
+            "Airport": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "country": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "longitude": {
+                        "type": "number"
+                    },
+                    "latitude": {
+                        "type": "number"
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Flight": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "airplane": {
+                        "$ref": "#/components/schemas/Airplane"
+                    },
+                    "startAirport": {
+                        "$ref": "#/components/schemas/Airport"
+                    },
+                    "destinationAirport": {
+                        "$ref": "#/components/schemas/Airport"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "arrivalDate": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "numberOfAvailableSeats": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "description": {
+                        "type": "string"
                     }
                 }
             }
