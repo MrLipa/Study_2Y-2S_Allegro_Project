@@ -7,7 +7,7 @@ SELECT * FROM users LIMIT 100;
 
 
 gradlew build
-gradlew build --no-daemon -x test
+gradlew build --no-daemon -x test 
 
 
 
