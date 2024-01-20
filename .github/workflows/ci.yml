@@ -54,26 +54,3 @@ jobs:
           path: |
             ./${{ matrix.service }}/build/libs/*.jar
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        run: |
-          SERVICE_NAME=${{ matrix.service }}
-          VERSION=$(git rev-parse --short HEAD) # Pobierz krótki hash commita jako wersję
-          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$SERVICE_NAME:$VERSION
-          
-          # Zbuduj obraz Docker
-          docker build -t $IMAGE_NAME ./$SERVICE_NAME
-          
-          # Wypchnij obraz do GitHub Packages
-          docker push $IMAGE_NAME
-          
-          # (Opcjonalnie) Zaktualizuj tag 'latest'
-          LATEST_IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$SERVICE_NAME:latest
-          docker tag $IMAGE_NAME $LATEST_IMAGE_NAME
-          docker push $LATEST_IMAGE_NAME
