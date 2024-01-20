@@ -65,9 +65,7 @@ jobs:
         run: |
           SERVICE_NAME=${{ matrix.service }}
           VERSION=$(git rev-parse --short HEAD) # Pobierz krótki hash commita jako wersję
-          LOWERCASE_USER_NAME=${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]'
-          LOWERCASE_SERVICE_NAME=$(echo $SERVICE_NAME | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME=ghcr.io/$LOWERCASE_USER_NAME/$LOWERCASE_SERVICE_NAME:$VERSION
+          IMAGE_NAME=ghcr.io/mrlipa/$SERVICE_NAME:$VERSION
           
           # Zbuduj obraz Docker
           docker build -t $IMAGE_NAME ./$SERVICE_NAME
