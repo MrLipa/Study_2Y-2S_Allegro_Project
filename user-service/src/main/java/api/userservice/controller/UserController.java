@@ -127,7 +127,7 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(mediaType = "text/plain")),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "text/plain")),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - Incorrect credentials", content = @Content(mediaType = "text/plain"))
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Incorrect credentials or use OAuth login", content = @Content(mediaType = "text/plain"))
     })
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO, HttpServletResponse response) {
@@ -137,6 +137,11 @@ public class UserController {
         }
 
         User foundUserEntity = foundUser.get();
+
+        if (foundUserEntity.getPassword() == null) {
+            return new ResponseEntity<>("No password set for the user. Please login using GitHub.", HttpStatus.UNAUTHORIZED);
+        }
+
         if (passwordEncoder.matches(loginDTO.getPassword() + foundUserEntity.getPasswordSalt(),
                 foundUserEntity.getPassword())) {
             String accessToken = jwtUtils.generateAccessToken(foundUserEntity);
