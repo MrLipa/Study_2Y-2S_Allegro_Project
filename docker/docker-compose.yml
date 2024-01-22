@@ -163,82 +163,82 @@ services:
       - app-network
     privileged: true
 
-  # prometheus:
-  #   build:
-  #     context: ./prometheus
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "9090:9090"
-  #   volumes:
-  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  #   networks:
-  #     - app-network
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
 
-  # grafana:
-  #   build:
-  #     context: ./grafana
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3010:3000"
-  #   volumes:
-  #     - ./grafana/datasources:/etc/grafana/provisioning/datasources/
-  #     - ./grafana/dashboards-config:/etc/grafana/provisioning/dashboards/
-  #     - ./grafana/dashboards:/var/lib/grafana/dashboards
-  #   networks:
-  #     - app-network
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+    ports:
+      - "3010:3000"
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources/
+      - ./grafana/dashboards-config:/etc/grafana/provisioning/dashboards/
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - app-network
 
-  # elasticsearch:
-  #   build:
-  #     context: ./elasticsearch
-  #     dockerfile: Dockerfile
-  #     args:
-  #       ELK_VERSION: $ELK_VERSION
-  #   volumes:
-  #     - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-  #   ports:
-  #     - "9200:9200"
-  #     - "9300:9300"
-  #   environment:
-  #     ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-  #     ELASTIC_PASSWORD: changeme
-  #     discovery.type: single-node
-  #   networks:
-  #     - app-network
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: changeme
+      discovery.type: single-node
+    networks:
+      - app-network
 
-  # logstash:
-  #   build:
-  #     context: ./logstash
-  #     dockerfile: Dockerfile
-  #     args:
-  #       ELK_VERSION: $ELK_VERSION
-  #   volumes:
-  #     - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
-  #     - ./logstash/pipeline:/usr/share/logstash/pipeline
-  #   ports:
-  #     - "9600:9600"
-  #     - "12201:12201/udp"
-  #   environment:
-  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-  #   depends_on:
-  #     - elasticsearch
-  #   networks:
-  #     - app-network
+  logstash:
+    build:
+      context: ./logstash
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "9600:9600"
+      - "12201:12201/udp"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
 
-  # kibana:
-  #   build:
-  #     context: ./kibana
-  #     dockerfile: Dockerfile
-  #     args:
-  #       ELK_VERSION: $ELK_VERSION
-  #   volumes:
-  #     - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
-  #     - ./kibana/kibana.ndjson:/usr/share/kibana/config/kibana.ndjson
-  #   ports:
-  #     - "5601:5601"
-  #   depends_on:
-  #   - elasticsearch
-  #   networks:
-  #     - app-network
+  kibana:
+    build:
+      context: ./kibana
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kibana/kibana.ndjson:/usr/share/kibana/config/kibana.ndjson
+    ports:
+      - "5601:5601"
+    depends_on:
+    - elasticsearch
+    networks:
+      - app-network
 
 networks:
   app-network:
