@@ -342,4 +342,25 @@ public class UserController {
 
         return ResponseEntity.ok("Email changed successfully");
     }
+
+    @Operation(summary = "Get Active User Info", description = "Retrieve information about the currently authenticated user.")
+    @ApiResponse(responseCode = "200", description = "User information retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)))
+    @ApiResponse(responseCode = "401", description = "Unauthorized - User is not authenticated")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    @GetMapping("/activeUser")
+    public ResponseEntity<User> getActiveUserInfo(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Long userId = Long.parseLong(((UserDetails) authentication.getPrincipal()).getUsername());
+
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (!userOptional.isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        User user = userOptional.get();
+        return ResponseEntity.ok(user);
+    }
 }

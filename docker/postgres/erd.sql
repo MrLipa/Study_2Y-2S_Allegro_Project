@@ -59,7 +59,7 @@ CREATE TABLE airplane (
     production_date DATE NOT NULL,
     number_of_seats INTEGER NOT NULL,
     max_distance INTEGER NOT NULL,
-    airport_id INTEGER NOT NULL REFERENCES airport(id)
+    airport_id INTEGER REFERENCES airport(id)
 );
 
 
@@ -81,9 +81,9 @@ VALUES
 
 CREATE TABLE flight (
     id SERIAL PRIMARY KEY,
-    airplane_id INTEGER NOT NULL REFERENCES airplane(id),
-    start_airport_id INTEGER NOT NULL REFERENCES airport(id),
-    destination_airport_id INTEGER NOT NULL REFERENCES airport(id),
+    airplane_id INTEGER REFERENCES airplane(id),
+    start_airport_id INTEGER REFERENCES airport(id),
+    destination_airport_id INTEGER REFERENCES airport(id),
     start_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     arrival_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
