@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -168,7 +169,9 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "text/plain"))
     })
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletResponse response, Authentication authentication) {
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication == null || !authentication.isAuthenticated()) {
             return new ResponseEntity<>("No active user session", HttpStatus.UNAUTHORIZED);
         }
@@ -199,14 +202,15 @@ public class UserController {
     })
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteUser(Authentication authentication) {
+    public ResponseEntity<String> deleteUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (authentication == null || !authentication.isAuthenticated()) {
             return new ResponseEntity<>("No active user session", HttpStatus.UNAUTHORIZED);
         }
 
         Long userId = Long.parseLong(((UserDetails) authentication.getPrincipal()).getUsername());
 
-        // Perform the user deletion
         Optional<User> userOptional = userRepository.findById(userId);
         if (!userOptional.isPresent()) {
             return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
@@ -269,8 +273,8 @@ public class UserController {
     })
 
     @PutMapping("/changePassword")
-    public ResponseEntity<String> changePassword(Authentication authentication,
-            @RequestBody PasswordChangeDTO passwordChangeDTO) {
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeDTO passwordChangeDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         Set<ConstraintViolation<PasswordChangeDTO>> violations = validator.validate(passwordChangeDTO);
         if (!violations.isEmpty()) {
@@ -312,8 +316,9 @@ public class UserController {
     })
 
     @PutMapping("/changeEmail")
-    public ResponseEntity<String> changeEmail(Authentication authentication,
-            @RequestBody EmailChangeDTO emailChangeDTO) {
+    public ResponseEntity<String> changeEmail(@RequestBody EmailChangeDTO emailChangeDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         Set<ConstraintViolation<EmailChangeDTO>> violations = validator.validate(emailChangeDTO);
         if (!violations.isEmpty()) {
             return buildValidationErrorsMessage(violations);
@@ -348,7 +353,8 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "Unauthorized - User is not authenticated")
     @ApiResponse(responseCode = "404", description = "User not found")
     @GetMapping("/activeUser")
-    public ResponseEntity<User> getActiveUserInfo(Authentication authentication) {
+    public ResponseEntity<User> getActiveUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }

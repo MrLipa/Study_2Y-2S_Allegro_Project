@@ -2,6 +2,10 @@ package api.userservice.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -35,4 +39,23 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    public User() {
+    }
+
+    public User(Long id, String username, String password, String email, String passwordSalt, String refreshToken, Set<Role> roles) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.passwordSalt = passwordSalt;
+        this.refreshToken = refreshToken;
+        this.roles = roles;
+    }
+
+    public User(String id, String password, Collection<Role> roles) {
+        this.id = Long.parseLong(id);
+        this.password = password;
+        this.roles = new HashSet<>(roles);
+    }
 }

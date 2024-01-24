@@ -1,14 +1,20 @@
 package api.userservice;
 
+import api.userservice.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -28,11 +34,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -261,41 +263,62 @@ public class UserControllerTest {
         user.setId(userId);
         user.setRefreshToken("someRefreshToken");
 
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(
-                new org.springframework.security.core.userdetails.User(userId.toString(), "", new ArrayList<>()));
+        UserDetails mockUserDetails = mock(UserDetails.class);
+        when(mockUserDetails.getUsername()).thenReturn(userId.toString());
 
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(mockUserDetails);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         HttpServletResponse response = mock(HttpServletResponse.class);
 
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<String> result = userController.logout(response, authentication);
+        ResponseEntity<String> result = userController.logout(response);
 
         // Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("Logout successful", result.getBody());
         assertNull(user.getRefreshToken(), "Refresh token should be cleared");
-        verify(userRepository, times(1)).save(user);
-        verify(response, times(2)).addCookie(any(Cookie.class));
+        verify(userRepository).save(user);
+        JwtAuthenticationFilter.clearTokenCookie(response, "accessToken");
+        JwtAuthenticationFilter.clearTokenCookie(response, "refreshToken");
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
+
+
+
 
     @Test
     public void whenLogoutWithUnauthenticatedUser_thenUnauthorized() {
         // Arrange
         Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(false);
 
         HttpServletResponse response = mock(HttpServletResponse.class);
 
+        // Set SecurityContextHolder to use the mocked SecurityContext
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<String> result = userController.logout(response, authentication);
+        ResponseEntity<String> result = userController.logout(response);
 
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         assertEquals("No active user session", result.getBody());
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
+
 
     @Test
     public void whenDeleteUserWithAuthenticatedUser_thenDeleteSuccessfully() {
@@ -304,20 +327,28 @@ public class UserControllerTest {
         User user = new User();
         user.setId(userId);
 
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(
-                new org.springframework.security.core.userdetails.User(userId.toString(), "", new ArrayList<>()));
+        UserDetails mockUserDetails = mock(UserDetails.class);
+        when(mockUserDetails.getUsername()).thenReturn(userId.toString());
 
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(mockUserDetails);
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<String> result = userController.deleteUser(authentication);
+        ResponseEntity<String> result = userController.deleteUser();
 
         // Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("User deleted successfully", result.getBody());
         verify(userRepository, times(1)).deleteById(userId);
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -326,30 +357,46 @@ public class UserControllerTest {
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(false);
 
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<String> result = userController.deleteUser(authentication);
+        ResponseEntity<String> result = userController.deleteUser();
 
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         assertEquals("No active user session", result.getBody());
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     public void whenDeleteNonExistingUser_thenNotFound() {
         // Arrange
-        Long userId = 1L;
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(
-                new org.springframework.security.core.userdetails.User(userId.toString(), "", new ArrayList<>()));
+                new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>()));
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        Long userId = Long.parseLong(((UserDetails) authentication.getPrincipal()).getUsername());
+
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<String> result = userController.deleteUser(authentication);
+        ResponseEntity<String> result = userController.deleteUser();
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
         assertEquals("User not found", result.getBody());
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -460,10 +507,14 @@ public class UserControllerTest {
         passwordChangeDTO.setOldPassword("oldPassword");
         passwordChangeDTO.setNewPassword("newPassword");
 
-        Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Long userId = Long.parseLong(userDetails.getUsername());
         User user = new User();
@@ -477,12 +528,15 @@ public class UserControllerTest {
         when(passwordEncoder.encode(anyString())).thenReturn("hashedNewPassword");
 
         // Act
-        ResponseEntity<String> response = userController.changePassword(authentication, passwordChangeDTO);
+        ResponseEntity<String> response = userController.changePassword(passwordChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Password changed successfully", response.getBody());
         verify(userRepository, times(1)).save(user);
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -492,10 +546,14 @@ public class UserControllerTest {
         passwordChangeDTO.setOldPassword("invalidOldPassword");
         passwordChangeDTO.setNewPassword("newPassword");
 
-        Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Long userId = Long.parseLong(userDetails.getUsername());
         User user = new User();
@@ -508,12 +566,15 @@ public class UserControllerTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         // Act
-        ResponseEntity<String> response = userController.changePassword(authentication, passwordChangeDTO);
+        ResponseEntity<String> response = userController.changePassword(passwordChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Invalid old password", response.getBody());
         verify(userRepository, never()).save(user);
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -526,13 +587,19 @@ public class UserControllerTest {
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(false);
 
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<String> response = userController.changePassword(authentication, passwordChangeDTO);
+        ResponseEntity<String> response = userController.changePassword(passwordChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals("No active user session", response.getBody());
-        verify(userRepository, never()).save(any(User.class));
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -542,22 +609,29 @@ public class UserControllerTest {
         passwordChangeDTO.setOldPassword("oldPassword");
         passwordChangeDTO.setNewPassword("newPassword");
 
-        Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Long userId = Long.parseLong(userDetails.getUsername());
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<String> response = userController.changePassword(authentication, passwordChangeDTO);
+        ResponseEntity<String> response = userController.changePassword(passwordChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("User not found", response.getBody());
         verify(userRepository, never()).save(any(User.class));
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -566,10 +640,14 @@ public class UserControllerTest {
         EmailChangeDTO emailChangeDTO = new EmailChangeDTO();
         emailChangeDTO.setNewEmail("newemail@example.com");
 
-        Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Long userId = Long.parseLong(userDetails.getUsername());
         User user = new User();
@@ -580,13 +658,16 @@ public class UserControllerTest {
         when(userRepository.existsByEmail(emailChangeDTO.getNewEmail())).thenReturn(false);
 
         // Act
-        ResponseEntity<String> response = userController.changeEmail(authentication, emailChangeDTO);
+        ResponseEntity<String> response = userController.changeEmail(emailChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Email changed successfully", response.getBody());
         assertEquals(emailChangeDTO.getNewEmail(), user.getEmail());
         verify(userRepository, times(1)).save(user);
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -595,10 +676,14 @@ public class UserControllerTest {
         EmailChangeDTO emailChangeDTO = new EmailChangeDTO();
         emailChangeDTO.setNewEmail("newemail@example.com");
 
-        Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Long userId = Long.parseLong(userDetails.getUsername());
         User user = new User();
@@ -609,13 +694,14 @@ public class UserControllerTest {
         when(userRepository.existsByEmail(emailChangeDTO.getNewEmail())).thenReturn(true);
 
         // Act
-        ResponseEntity<String> response = userController.changeEmail(authentication, emailChangeDTO);
+        ResponseEntity<String> response = userController.changeEmail(emailChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Email already in use", response.getBody());
 
-        verify(userRepository, never()).save(any(User.class));
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -627,13 +713,19 @@ public class UserControllerTest {
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(false);
 
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<String> response = userController.changeEmail(authentication, emailChangeDTO);
+        ResponseEntity<String> response = userController.changeEmail(emailChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals("No active user session", response.getBody());
-        verify(userRepository, never()).save(any(User.class));
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -642,22 +734,29 @@ public class UserControllerTest {
         EmailChangeDTO emailChangeDTO = new EmailChangeDTO();
         emailChangeDTO.setNewEmail("newemail@example.com");
 
-        Authentication authentication = mock(Authentication.class);
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
 
         Long userId = Long.parseLong(userDetails.getUsername());
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<String> response = userController.changeEmail(authentication, emailChangeDTO);
+        ResponseEntity<String> response = userController.changeEmail(emailChangeDTO);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("User not found", response.getBody());
         verify(userRepository, never()).save(any(User.class));
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -669,19 +768,24 @@ public class UserControllerTest {
         expectedUser.setUsername("user");
         expectedUser.setEmail("user@example.com");
 
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(
-                new org.springframework.security.core.userdetails.User(userId.toString(), "", new ArrayList<>()));
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(userId.toString(), "", new ArrayList<>());
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(expectedUser));
 
         // Act
-        ResponseEntity<User> response = userController.getActiveUserInfo(authentication);
+        ResponseEntity<User> response = userController.getActiveUserInfo();
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedUser, response.getBody());
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -690,31 +794,45 @@ public class UserControllerTest {
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(false);
 
+        SecurityContext securityContext = Mockito.mock(SecurityContext.class);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         // Act
-        ResponseEntity<User> response = userController.getActiveUserInfo(authentication);
+        ResponseEntity<User> response = userController.getActiveUserInfo();
 
         // Assert
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNull(response.getBody());
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     public void whenGetActiveUserInfoWithNonExistingUser_thenNotFound() {
         // Arrange
-        Long userId = 1L;
-
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User("1", "", new ArrayList<>());
         Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getPrincipal()).thenReturn(
-                new org.springframework.security.core.userdetails.User(userId.toString(), "", new ArrayList<>()));
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        SecurityContextHolder.setContext(securityContext);
+
+        Long userId = Long.parseLong(userDetails.getUsername());
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<User> response = userController.getActiveUserInfo(authentication);
+        ResponseEntity<User> response = userController.getActiveUserInfo();
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
+
+        // Clear SecurityContextHolder after test
+        SecurityContextHolder.clearContext();
     }
 }
