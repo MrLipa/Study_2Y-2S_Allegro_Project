@@ -164,23 +164,22 @@ services:
     privileged: true
 
   prometheus:
-    container_name: prometheus
-    image: prom/prometheus
-    restart: always
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile
     ports:
       - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
       - app-network
 
   grafana:
-    container_name: grafana
-    image: grafana/grafana
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3010:3000"
     volumes:
       - ./grafana/datasources:/etc/grafana/provisioning/datasources/
       - ./grafana/dashboards-config:/etc/grafana/provisioning/dashboards/
