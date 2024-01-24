@@ -6,11 +6,14 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE,
     refresh_token VARCHAR(255)
 );
+
 INSERT INTO users (username, password, password_salt, email, refresh_token)
-VALUES ('admin', '$2a$10$hlbR8xSCnlUsXkKJI4mOf.aXnnfH4KqS/KLms7HdvU9aQjkazMC5O', '$2a$10$Lt5L35m/vToBge4bJBrVl.', 'admin@example.com', NULL);
-/*
-password: Admin
-*/
+VALUES ('admin', '$2a$10$hlbR8xSCnlUsXkKJI4mOf.aXnnfH4KqS/KLms7HdvU9aQjkazMC5O', '$2a$10$Lt5L35m/vToBge4bJBrVl.', 'admin@example.com', NULL),
+/* password: Admin */
+        ('user1', '$2a$10$ZiLcqo9/sRySf.u1TxKw/eHEu9Ty.zXTt0if3/JtgkYpDRFJnizZG', '$2a$10$gE6HbSbO.u5bqlKfu2pIf.', 'user1@example.com', NULL),
+        ('user2', '$2a$10$Df4KcqoK/vToBf/6bJBrVl.', '$2a$10$gE6HbSbO.u5bqlKfu2pIf.', 'user2@example.com', NULL),
+        ('user3', '$2a$10$Lt5L35m/vToBge4bJBrVl.', '$2a$10$gE6HbSbO.u5bqlKfu2pIf.', 'user3@example.com', NULL),
+        ('user4', '$2a$10$Lt5L35m/vToBge4bJBrVl.', '$2a$10$gE6HbSbO.u5bqlKfu2pIf.', 'user4@example.com', NULL);
 
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
@@ -20,8 +23,8 @@ CREATE TABLE roles (
 INSERT INTO roles (name) VALUES ('ROLE_USER'),('ROLE_ADMIN'),('ROLE_AIRPORT_MANAGER'),('ROLE_AIRPLANE_MANAGER'),('ROLE_FLIGHT_MANAGER');
 
 CREATE TABLE user_roles (
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    role_id INTEGER NOT NULL REFERENCES roles(id),
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE SET NULL,
     PRIMARY KEY (user_id, role_id)
 );
 
@@ -59,7 +62,7 @@ CREATE TABLE airplane (
     production_date DATE NOT NULL,
     number_of_seats INTEGER NOT NULL,
     max_distance INTEGER NOT NULL,
-    airport_id INTEGER REFERENCES airport(id)
+    airport_id INTEGER REFERENCES airport(id) ON DELETE SET NULL
 );
 
 
@@ -81,9 +84,9 @@ VALUES
 
 CREATE TABLE flight (
     id SERIAL PRIMARY KEY,
-    airplane_id INTEGER REFERENCES airplane(id),
-    start_airport_id INTEGER REFERENCES airport(id),
-    destination_airport_id INTEGER REFERENCES airport(id),
+    airplane_id INTEGER REFERENCES airplane(id) ON DELETE SET NULL,
+    start_airport_id INTEGER REFERENCES airport(id) ON DELETE SET NULL,
+    destination_airport_id INTEGER REFERENCES airport(id) ON DELETE SET NULL,
     start_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     arrival_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
@@ -107,3 +110,31 @@ VALUES
 (2, 7, 6, '2024-09-15 19:00:00', '2024-09-16 00:30:00', 720.00, 853, 'Evening flight from Sydney to Dubai.'),
 (3, 5, 4, '2024-10-22 11:00:00', '2024-10-22 17:20:00', 560.00, 396, 'Midday flight from Los Angeles to Beijing.'),
 (4, 1, 10, '2024-11-09 07:45:00', '2024-11-09 13:30:00', 630.00, 150, 'Morning flight from New York to Frankfurt.');
+
+
+CREATE TABLE reservation (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    flight_id INTEGER REFERENCES flight(id) ON DELETE SET NULL,
+    reservation_date TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO reservation (user_id, flight_id)
+VALUES
+    ((SELECT id FROM users WHERE username = 'admin'), (SELECT id FROM flight WHERE id = 1)),
+    ((SELECT id FROM users WHERE username = 'admin'), (SELECT id FROM flight WHERE id = 3)),
+    ((SELECT id FROM users WHERE username = 'user1'), (SELECT id FROM flight WHERE id = 2)),
+    ((SELECT id FROM users WHERE username = 'user1'), (SELECT id FROM flight WHERE id = 5)),
+    ((SELECT id FROM users WHERE username = 'user2'), (SELECT id FROM flight WHERE id = 4)),
+    ((SELECT id FROM users WHERE username = 'user2'), (SELECT id FROM flight WHERE id = 6)),
+    ((SELECT id FROM users WHERE username = 'admin'), (SELECT id FROM flight WHERE id = 7)),
+    ((SELECT id FROM users WHERE username = 'admin'), (SELECT id FROM flight WHERE id = 10)),
+    ((SELECT id FROM users WHERE username = 'user1'), (SELECT id FROM flight WHERE id = 8)),
+    ((SELECT id FROM users WHERE username = 'user1'), (SELECT id FROM flight WHERE id = 9)),
+    ((SELECT id FROM users WHERE username = 'user2'), (SELECT id FROM flight WHERE id = 11)),
+    ((SELECT id FROM users WHERE username = 'user2'), (SELECT id FROM flight WHERE id = 14)),
+    ((SELECT id FROM users WHERE username = 'user3'), (SELECT id FROM flight WHERE id = 12)),
+    ((SELECT id FROM users WHERE username = 'user3'), (SELECT id FROM flight WHERE id = 13)),
+    ((SELECT id FROM users WHERE username = 'user4'), (SELECT id FROM flight WHERE id = 1)),
+    ((SELECT id FROM users WHERE username = 'user4'), (SELECT id FROM flight WHERE id = 5)),
+    ((SELECT id FROM users WHERE username = 'user4'), (SELECT id FROM flight WHERE id = 8));
