@@ -9,9 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +39,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@ActiveProfiles("test")
+
+@ExtendWith(MockitoExtension.class)
 public class FlightControllerTest {
 
     @Mock
@@ -150,9 +153,6 @@ public class FlightControllerTest {
         FlightDTO flightDTO = new FlightDTO();
 
         when(flightRepository.findById(id)).thenReturn(Optional.of(existingFlight));
-        when(airplaneRepository.findById(flightDTO.getAirplaneId())).thenReturn(Optional.of(new Airplane()));
-        when(airportRepository.findById(flightDTO.getStartAirportId())).thenReturn(Optional.of(new Airport()));
-        when(airportRepository.findById(flightDTO.getDestinationAirportId())).thenReturn(Optional.of(new Airport()));
         when(flightRepository.save(any(Flight.class))).thenReturn(existingFlight);
 
         // Act
@@ -247,7 +247,6 @@ public class FlightControllerTest {
     }
 
     @Test
-    @Disabled("problems witch search")
     public void testSearchFlights_Success() {
         // Arrange
         SearchCriteria criteriaDepartureAirport = new SearchCriteria("startAirport", ":", "JFK");
@@ -258,8 +257,7 @@ public class FlightControllerTest {
                 criteriaMaxPrice);
 
         List<Flight> foundFlights = Arrays.asList(new Flight(), new Flight());
-        Specification<Flight> spec = createSpecificationFromCriteria(searchCriteriaList);
-        when(flightRepository.findAll(spec)).thenReturn(foundFlights);
+        when(flightRepository.findAll(any(Specification.class))).thenReturn(foundFlights);
 
         // Act
         ResponseEntity<List<Flight>> response = flightController.searchFlights(searchCriteriaList);
@@ -268,29 +266,16 @@ public class FlightControllerTest {
         assertNotNull(response.getBody());
         assertEquals(2, response.getBody().size());
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(flightRepository, times(1)).findAll(spec);
-    }
-
-    private Specification<Flight> createSpecificationFromCriteria(List<SearchCriteria> criteriaList) {
-        Specification<Flight> specification = Specification.where(null);
-
-        for (SearchCriteria criteria : criteriaList) {
-            FlightSpecification flightSpec = new FlightSpecification(criteria);
-            specification = specification.and(flightSpec);
-        }
-
-        return specification;
+        verify(flightRepository, times(1)).findAll(any(Specification.class));
     }
 
     @Test
-    @Disabled("problems witch search")
     public void testSearchFlights_NoResults() {
         // Arrange
         List<SearchCriteria> searchCriteriaList = Arrays.asList(
                 new SearchCriteria("departure", ":", "NYC"),
                 new SearchCriteria("arrival", ":", "LAX"));
-        Specification<Flight> spec = createSpecificationFromCriteria(searchCriteriaList);
-        when(flightRepository.findAll(spec)).thenReturn(Collections.emptyList());
+        when(flightRepository.findAll(any(Specification.class))).thenReturn(Collections.emptyList());
 
         // Act
         ResponseEntity<List<Flight>> response = flightController.searchFlights(searchCriteriaList);
@@ -299,7 +284,7 @@ public class FlightControllerTest {
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isEmpty());
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(flightRepository, times(1)).findAll(spec);
+        verify(flightRepository, times(1)).findAll(any(Specification.class));
     }
 
 }
