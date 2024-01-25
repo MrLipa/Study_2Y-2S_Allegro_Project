@@ -23,7 +23,7 @@ scrape_configs:
     static_configs:
       - targets: ['docker-airplane-service-1:8080']
 
-  - job_name: 'reservation-service-service'
+  - job_name: 'reservation-service'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['docker-reservation-service-service-1:8080']
+      - targets: ['docker-reservation-service-1:8080']
