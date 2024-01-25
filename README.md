@@ -39,7 +39,7 @@ http_server_requests_seconds_count
     networks: 
       - app-network
 
-
+ 
 
 
 echo YOUR_PERSONAL_ACCESS_TOKEN | docker login ghcr.io -u MrLipa --password-stdin
