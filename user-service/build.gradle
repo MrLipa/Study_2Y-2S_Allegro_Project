@@ -44,10 +44,10 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-task integrationTest(type: Test) {
-    if (!project.hasProperty('skipIntegrationTests')) {
-        // integration test configuration
-    }
+tasks.register('integrationTest', Test) {
+	if (!project.hasProperty('skipIntegrationTests')) {
+		// integration test configuration
+	}
 }
 
 build.dependsOn(integrationTest)
