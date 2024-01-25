@@ -19,7 +19,6 @@ jobs:
       matrix:
         service:
           - user-service
-          - notification-service
           - flight-service
           - airport-service
           - airplane-service

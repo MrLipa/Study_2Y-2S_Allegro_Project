@@ -13,18 +13,6 @@ services:
       - postgres
     privileged: true
 
-  notification-service:
-    build:
-      context: ./../notification-service
-      dockerfile: Dockerfile
-    ports:
-      - '3002:8080'
-    networks: 
-      - app-network
-    depends_on:
-      - postgres
-    privileged: true
-
   flight-service:
     build:
       context: ./../flight-service
@@ -82,11 +70,10 @@ services:
       - app-network
     depends_on:
       - user-service
-      - notification-service
       - flight-service
       - airport-service
       - airplane-service
-      - admin-service
+      - reservation-service
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -101,11 +88,10 @@ services:
       - app-network
     depends_on:
       - user-service
-      - notification-service
       - flight-service
       - airport-service
       - airplane-service
-      - admin-service
+      - reservation-service
       
   postgres:
     build:
