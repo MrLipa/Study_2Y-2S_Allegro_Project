@@ -12,11 +12,10 @@ swagger_config = {
     },
     "apis": [
         {"url": "http://localhost:3001/v3/api-docs", "name": "User Service"},
-        {"url": "http://localhost:3002/v3/api-docs", "name": "Notification Service"},
-        {"url": "http://localhost:3003/v3/api-docs", "name": "Flight Service"},
-        {"url": "http://localhost:3004/v3/api-docs", "name": "Airport Service"},
-        {"url": "http://localhost:3005/v3/api-docs", "name": "Airplane Service"},
-        {"url": "http://localhost:3006/v3/api-docs", "name": "Admin Service"}
+        {"url": "http://localhost:3002/v3/api-docs", "name": "Flight Service"},
+        {"url": "http://localhost:3003/v3/api-docs", "name": "Airport Service"},
+        {"url": "http://localhost:3004/v3/api-docs", "name": "Airplane Service"},
+        {"url": "http://localhost:3005/v3/api-docs", "name": "Reservation Service"}
     ]
 }
 

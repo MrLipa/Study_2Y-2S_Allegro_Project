@@ -18,7 +18,7 @@ services:
       context: ./../flight-service
       dockerfile: Dockerfile
     ports:
-      - '3003:8080'
+      - '3002:8080'
     networks: 
       - app-network
     depends_on:
@@ -30,7 +30,7 @@ services:
       context: ./../airport-service
       dockerfile: Dockerfile
     ports:
-      - '3004:8080'
+      - '3003:8080'
     networks: 
       - app-network
     depends_on:
@@ -42,7 +42,7 @@ services:
       context: ./../airplane-service
       dockerfile: Dockerfile
     ports:
-      - '3005:8080'
+      - '3004:8080'
     networks: 
       - app-network
     depends_on:
@@ -54,7 +54,7 @@ services:
       context: ./../reservation-service
       dockerfile: Dockerfile
     ports:
-      - '3006:8080'
+      - '3005:8080'
     networks: 
       - app-network
     depends_on:

@@ -14,7 +14,7 @@ services:
   flight-service:
     image: ghcr.io/mrlipa/flight-service:213742069
     ports:
-      - "3003:8080"
+      - "3002:8080"
     networks:
       - app-network
     depends_on:
@@ -24,7 +24,7 @@ services:
   airport-service:
     image: ghcr.io/mrlipa/airport-service:213742069
     ports:
-      - "3004:8080"
+      - "3003:8080"
     networks:
       - app-network
     depends_on:
@@ -34,7 +34,7 @@ services:
   airplane-service:
     image: ghcr.io/mrlipa/airplane-service:213742069
     ports:
-      - "3005:8080"
+      - "3004:8080"
     networks:
       - app-network
     depends_on:
@@ -44,7 +44,7 @@ services:
   reservation-service:
     image: ghcr.io/mrlipa/reservation-service:213742069
     ports:
-      - "3006:8080"
+      - "3005:8080"
     networks:
       - app-network
     depends_on:
