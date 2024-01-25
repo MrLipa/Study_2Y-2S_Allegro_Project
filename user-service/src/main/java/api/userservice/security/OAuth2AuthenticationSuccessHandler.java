@@ -46,9 +46,6 @@ public class OAuth2AuthenticationSuccessHandler extends SavedRequestAwareAuthent
             String username = oauthUser.getAttribute("login");
             String email = oauthUser.getAttribute("email");
 
-            System.out.println("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
-            System.out.println(oauthUser.getAttributes());
-
             User user = userRepository.findByUsername(username)
                     .orElseGet(() -> {
                         User newUser = new User();
@@ -59,10 +56,6 @@ public class OAuth2AuthenticationSuccessHandler extends SavedRequestAwareAuthent
 
                         return userRepository.save(newUser);
                     });
-
-        
-            System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-            System.out.println("email: " + user.getEmail());
 
             String accessToken = jwtUtils.generateAccessToken(user);
             String refreshToken = jwtUtils.generateRefreshToken(user);
