@@ -10,4 +10,4 @@ docker images -q | ForEach-Object { docker rmi -f $_ }
 # docker volume ls
 docker volume ls -q | ForEach-Object { docker volume rm $_ }
 docker-compose -f docker-compose-ghcr.yml build
-docker-compose -f docker-compose-ghcr.yml up
+docker-compose -f docker-compose-ghcr.yml up -d
