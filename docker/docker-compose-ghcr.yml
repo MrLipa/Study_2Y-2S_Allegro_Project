@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.1'
 
 services:
   user-service:
@@ -60,7 +60,7 @@ services:
     depends_on:
       - postgres
     privileged: true
-    
+
   swagger-editor:
     image: swaggerapi/swagger-editor
     container_name: "swagger-editor"
@@ -114,20 +114,6 @@ services:
       - app-network
     privileged: true
 
-  # neo4j:
-  #   build:
-  #     context: ./neo4j
-  #     dockerfile: Dockerfile
-  #   user: root
-  #   ports:
-  #     - "7687:7687"
-  #     - "7474:7474"
-  #     - "7473:7473"
-  #   command: ["./init-db.sh"]
-  #   networks:
-  #     - app-network
-  #   privileged: true
-
   pdadmin:
     build:
       context: ./pgadmin
@@ -174,7 +160,75 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - app-network
-      
+
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: changeme
+      discovery.type: single-node
+    networks:
+      - app-network
+
+  logstash:
+    build:
+      context: ./logstash
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "9600:9600"
+      - "12201:12201/udp"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    depends_on:
+      - elasticsearch
+    networks:
+      - app-network
+
+  kibana:
+    build:
+      context: ./kibana
+      dockerfile: Dockerfile
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kibana/kibana.ndjson:/usr/share/kibana/config/kibana.ndjson
+    ports:
+      - "5601:5601"
+    depends_on:
+    - elasticsearch
+    networks:
+      - app-network
+
+  # neo4j:
+  #   build:
+  #     context: ./neo4j
+  #     dockerfile: Dockerfile
+  #   user: root
+  #   ports:
+  #     - "7687:7687"
+  #     - "7474:7474"
+  #     - "7473:7473"
+  #   command: ["./init-db.sh"]
+  #   networks:
+  #     - app-network
+  #   privileged: true
+
 networks:
   app-network:
     driver: bridge
+

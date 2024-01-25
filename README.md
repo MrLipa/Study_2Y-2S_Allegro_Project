@@ -54,9 +54,13 @@ snyk code test
 
 
 
+Get-Process | Where-Object {$_.ProcessName -like "*ssh*"}
+Stop-Process -Id
+ssh -N -f -L 81:172.20.73.4:81 9szkaradek@taurus.fis.agh.edu.pl
 
+ssh -N -f -L 81:172.20.73.4:81 -L 3001:172.20.73.4:3001 -L 3002:172.20.73.4:3002 -L 3003:172.20.73.4:3003 -L 3004:172.20.73.4:3004 -L 3005:172.20.73.4:3005 -L 3006:172.20.73.4:3006 -L 8080:172.20.73.4:8080 -L 3010:172.20.73.4:3010 9szkaradek@taurus.fis.agh.edu.pl
 
-
+http://localhost:3001/oauth2/authorization/github
 
 
 
