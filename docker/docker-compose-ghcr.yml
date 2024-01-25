@@ -7,6 +7,9 @@ services:
       - "3001:8080"
     networks:
       - app-network
+    depends_on:
+      - postgres
+    privileged: true
 
   notification-service:
     image: ghcr.io/mrlipa/notification-service:213742069
@@ -14,35 +17,50 @@ services:
       - "3002:8080"
     networks:
       - app-network
-
+    depends_on:
+      - postgres
+    privileged: true
+    
   flight-service:
     image: ghcr.io/mrlipa/flight-service:213742069
     ports:
       - "3003:8080"
     networks:
       - app-network
-
+    depends_on:
+      - postgres
+    privileged: true
+    
   airport-service:
     image: ghcr.io/mrlipa/airport-service:213742069
     ports:
       - "3004:8080"
     networks:
       - app-network
-
+    depends_on:
+      - postgres
+    privileged: true
+    
   airplane-service:
     image: ghcr.io/mrlipa/airplane-service:213742069
     ports:
       - "3005:8080"
     networks:
       - app-network
-
+    depends_on:
+      - postgres
+    privileged: true
+    
   admin-service:
     image: ghcr.io/mrlipa/admin-service:213742069
     ports:
       - "3006:8080"
     networks:
       - app-network
-      
+    depends_on:
+      - postgres
+    privileged: true
+    
   swagger-editor:
     image: swaggerapi/swagger-editor
     container_name: "swagger-editor"
@@ -96,19 +114,19 @@ services:
       - app-network
     privileged: true
 
-  neo4j:
-    build:
-      context: ./neo4j
-      dockerfile: Dockerfile
-    user: root
-    ports:
-      - "7687:7687"
-      - "7474:7474"
-      - "7473:7473"
-    command: ["./init-db.sh"]
-    networks:
-      - app-network
-    privileged: true
+  # neo4j:
+  #   build:
+  #     context: ./neo4j
+  #     dockerfile: Dockerfile
+  #   user: root
+  #   ports:
+  #     - "7687:7687"
+  #     - "7474:7474"
+  #     - "7473:7473"
+  #   command: ["./init-db.sh"]
+  #   networks:
+  #     - app-network
+  #   privileged: true
 
   pdadmin:
     build:
@@ -133,6 +151,30 @@ services:
       - app-network
     privileged: true
 
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+    ports:
+      - "3010:3000"
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources/
+      - ./grafana/dashboards-config:/etc/grafana/provisioning/dashboards/
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - app-network
+      
 networks:
   app-network:
     driver: bridge

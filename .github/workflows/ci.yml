@@ -36,8 +36,10 @@ jobs:
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x ./${{ matrix.service }}/gradlew
+      # - name: Run tests
+      #   run: cd ./${{ matrix.service }} && ./gradlew test
       - name: Build with Gradle
-        run: cd ./${{ matrix.service }} && ./gradlew build -x test
+        run: cd ./${{ matrix.service }} && ./gradlew build -x test  
 
       # Snyk Integration
       - name: Install Snyk

@@ -8,6 +8,37 @@ SELECT * FROM users LIMIT 100;
 
 gradlew build
 gradlew build --no-daemon -x test  
+gradlew --refresh-dependencies
+gradlew clean build --refresh-dependencies
+
+http_server_requests_seconds_count
+
+  notification-service:
+    build:
+      context: ./../notification-service
+      dockerfile: Dockerfile
+    restart: always
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - '8080:8080'
+    networks: 
+      - app-network
+    privileged: true
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    restart: always
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks: 
+      - app-network
+
 
 
 
