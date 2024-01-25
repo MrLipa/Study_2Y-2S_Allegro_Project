@@ -52,7 +52,7 @@ snyk monitor --all-projects
 snyk code test
 
 
-
+http://prometheus:9090/
 
 Get-Process | Where-Object {$_.ProcessName -like "*ssh*"}
 Stop-Process -Id

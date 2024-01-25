@@ -51,8 +51,8 @@ services:
       - postgres
     privileged: true
     
-  admin-service:
-    image: ghcr.io/mrlipa/admin-service:213742069
+  reservation-service:
+    image: ghcr.io/mrlipa/reservation-service:213742069
     ports:
       - "3006:8080"
     networks:

@@ -61,9 +61,9 @@ services:
       - postgres
     privileged: true
 
-  admin-service:
+  reservation-service:
     build:
-      context: ./../admin-service
+      context: ./../reservation-service
       dockerfile: Dockerfile
     ports:
       - '3006:8080'

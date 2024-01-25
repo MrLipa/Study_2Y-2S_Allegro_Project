@@ -23,7 +23,7 @@ jobs:
           - flight-service
           - airport-service
           - airplane-service
-          - admin-service
+          - reservation-service
     steps:
       - name: Say Hello
         run: echo "Hello World"
@@ -36,10 +36,10 @@ jobs:
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x ./${{ matrix.service }}/gradlew
-      # - name: Run tests
-      #   run: cd ./${{ matrix.service }} && ./gradlew test
+      - name: Run tests
+        run: cd ./${{ matrix.service }} && ./gradlew test
       - name: Build with Gradle
-        run: cd ./${{ matrix.service }} && ./gradlew build -x test  
+        run: cd ./${{ matrix.service }} && ./gradlew build
 
       # Snyk Integration
       - name: Install Snyk
